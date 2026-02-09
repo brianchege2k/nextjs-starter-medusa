@@ -21,6 +21,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
     <html lang="en" data-mode="light" className={dmSans.variable}>
       <body className="min-h-screen font-sans antialiased">
         <main className="relative min-h-screen">{props.children}</main>
+        <SpeedInsights />
       </body>
     </html>
   )
