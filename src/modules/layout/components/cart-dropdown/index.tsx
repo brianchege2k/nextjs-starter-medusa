@@ -16,6 +16,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Thumbnail from "@modules/products/components/thumbnail"
 import { usePathname } from "next/navigation"
 import { Fragment, useEffect, useRef, useState } from "react"
+import { ShoppingBag } from "lucide-react"
 
 const CartDropdown = ({
   cart: cartState,
@@ -82,11 +83,28 @@ const CartDropdown = ({
       <Popover className="relative h-full">
         <PopoverButton className="h-full">
           <LocalizedClientLink
-            className="hover:text-ui-fg-base"
             href="/cart"
             data-testid="nav-cart-link"
-          >{`Cart (${totalItems})`}</LocalizedClientLink>
+            className="h-full inline-flex items-center gap-2 px-3 rounded-md transition hover:opacity-90"
+            style={{ color: "#916953" }}
+          >
+            <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+
+            <span className="hidden small:inline">{`Cart`}</span>
+
+            <span
+              className="ml-1 inline-flex items-center justify-center min-w-[22px] h-[22px] px-2 rounded-full text-[12px] leading-none"
+              style={{
+                backgroundColor: "#fcddf2",
+                color: "#916953",
+              }}
+              aria-label={`Cart items: ${totalItems}`}
+            >
+              {totalItems}
+            </span>
+          </LocalizedClientLink>
         </PopoverButton>
+
         <Transition
           show={cartDropdownOpen}
           as={Fragment}
@@ -99,12 +117,21 @@ const CartDropdown = ({
         >
           <PopoverPanel
             static
-            className="hidden small:block absolute top-[calc(100%+1px)] right-0 bg-white border-x border-b border-gray-200 w-[420px] text-ui-fg-base"
+            className="hidden small:block absolute top-[calc(100%+1px)] right-0 border-x border-b w-[420px] text-ui-fg-base"
+            style={{
+              backgroundColor: "#faf6f6",
+              borderColor: "rgba(145, 105, 83, 0.18)",
+            }}
             data-testid="nav-cart-dropdown"
           >
-            <div className="p-4 flex items-center justify-center">
-              <h3 className="text-large-semi">Cart</h3>
+            <div className="p-4 flex items-center justify-center border-b"
+              style={{ borderColor: "rgba(145, 105, 83, 0.18)" }}
+            >
+              <h3 className="text-large-semi" style={{ color: "#916953" }}>
+                Cart
+              </h3>
             </div>
+
             {cartState && cartState.items?.length ? (
               <>
                 <div className="overflow-y-scroll max-h-[402px] px-4 grid grid-cols-1 gap-y-8 no-scrollbar p-px">
@@ -130,30 +157,39 @@ const CartDropdown = ({
                             size="square"
                           />
                         </LocalizedClientLink>
+
                         <div className="flex flex-col justify-between flex-1">
                           <div className="flex flex-col flex-1">
                             <div className="flex items-start justify-between">
                               <div className="flex flex-col overflow-ellipsis whitespace-nowrap mr-4 w-[180px]">
-                                <h3 className="text-base-regular overflow-hidden text-ellipsis">
+                                <h3
+                                  className="text-base-regular overflow-hidden text-ellipsis"
+                                  style={{ color: "#916953" }}
+                                >
                                   <LocalizedClientLink
                                     href={`/products/${item.product_handle}`}
                                     data-testid="product-link"
+                                    className="hover:opacity-90"
                                   >
                                     {item.title}
                                   </LocalizedClientLink>
                                 </h3>
+
                                 <LineItemOptions
                                   variant={item.variant}
                                   data-testid="cart-item-variant"
                                   data-value={item.variant}
                                 />
+
                                 <span
                                   data-testid="cart-item-quantity"
                                   data-value={item.quantity}
+                                  className="text-ui-fg-subtle"
                                 >
                                   Quantity: {item.quantity}
                                 </span>
                               </div>
+
                               <div className="flex justify-end">
                                 <LineItemPrice
                                   item={item}
@@ -163,6 +199,7 @@ const CartDropdown = ({
                               </div>
                             </div>
                           </div>
+
                           <DeleteButton
                             id={item.id}
                             className="mt-1"
@@ -174,16 +211,20 @@ const CartDropdown = ({
                       </div>
                     ))}
                 </div>
-                <div className="p-4 flex flex-col gap-y-4 text-small-regular">
+
+                <div className="p-4 flex flex-col gap-y-4 text-small-regular border-t"
+                  style={{ borderColor: "rgba(145, 105, 83, 0.18)" }}
+                >
                   <div className="flex items-center justify-between">
-                    <span className="text-ui-fg-base font-semibold">
-                      Subtotal{" "}
-                      <span className="font-normal">(excl. taxes)</span>
+                    <span style={{ color: "#916953" }} className="font-semibold">
+                      Subtotal <span className="font-normal">(excl. taxes)</span>
                     </span>
+
                     <span
                       className="text-large-semi"
                       data-testid="cart-subtotal"
                       data-value={subtotal}
+                      style={{ color: "#916953" }}
                     >
                       {convertToLocale({
                         amount: subtotal,
@@ -191,11 +232,16 @@ const CartDropdown = ({
                       })}
                     </span>
                   </div>
+
                   <LocalizedClientLink href="/cart" passHref>
                     <Button
                       className="w-full"
                       size="large"
                       data-testid="go-to-cart-button"
+                      style={{
+                        backgroundColor: "#916953",
+                        color: "#faf6f6",
+                      }}
                     >
                       Go to cart
                     </Button>
@@ -203,21 +249,30 @@ const CartDropdown = ({
                 </div>
               </>
             ) : (
-              <div>
-                <div className="flex py-16 flex-col gap-y-4 items-center justify-center">
-                  <div className="bg-gray-900 text-small-regular flex items-center justify-center w-6 h-6 rounded-full text-white">
-                    <span>0</span>
-                  </div>
-                  <span>Your shopping bag is empty.</span>
-                  <div>
-                    <LocalizedClientLink href="/store">
-                      <>
-                        <span className="sr-only">Go to all products page</span>
-                        <Button onClick={close}>Explore products</Button>
-                      </>
-                    </LocalizedClientLink>
-                  </div>
+              <div className="flex py-16 flex-col gap-y-4 items-center justify-center">
+                <div
+                  className="text-small-regular flex items-center justify-center w-9 h-9 rounded-full"
+                  style={{ backgroundColor: "#fcddf2", color: "#916953" }}
+                >
+                  <span className="font-semibold">0</span>
                 </div>
+
+                <span className="text-ui-fg-subtle">Your shopping bag is empty.</span>
+
+                <LocalizedClientLink href="/store">
+                  <>
+                    <span className="sr-only">Go to all products page</span>
+                    <Button
+                      onClick={close}
+                      style={{
+                        backgroundColor: "#916953",
+                        color: "#faf6f6",
+                      }}
+                    >
+                      Explore products
+                    </Button>
+                  </>
+                </LocalizedClientLink>
               </div>
             )}
           </PopoverPanel>

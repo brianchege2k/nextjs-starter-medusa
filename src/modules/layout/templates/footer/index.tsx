@@ -3,7 +3,16 @@ import { listCollections } from "@lib/data/collections"
 import { Text, clx } from "@medusajs/ui"
 
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import MedusaCTA from "@modules/layout/components/medusa-cta"
+
+import {
+  Instagram,
+  Facebook,
+  Twitter,
+  Youtube,
+  Mail,
+  Phone,
+  MapPin,
+} from "lucide-react"
 
 export default async function Footer() {
   const { collections } = await listCollections({
@@ -12,31 +21,98 @@ export default async function Footer() {
   const productCategories = await listCategories()
 
   return (
-    <footer className="border-t border-ui-border-base w-full">
+    <footer
+      className="border-t border-ui-border-base w-full"
+      style={{ backgroundColor: "#faf6f6" }}
+    >
       <div className="content-container flex flex-col w-full">
-        <div className="flex flex-col gap-y-6 xsmall:flex-row items-start justify-between py-40">
-          <div>
+        {/* Top Section */}
+        <div className="flex flex-col gap-y-10 xsmall:flex-row items-start justify-between py-24">
+          {/* Brand + short pitch + socials */}
+          <div className="max-w-sm">
             <LocalizedClientLink
               href="/"
-              className="txt-compact-xlarge-plus text-ui-fg-subtle hover:text-ui-fg-base uppercase"
+              className="txt-compact-xlarge-plus uppercase inline-flex items-center"
+              style={{ color: "#916953" }}
             >
-              Medusa Store
+              Best Buys Ke
             </LocalizedClientLink>
+
+            <p className="mt-3 txt-small text-ui-fg-subtle">
+              Quality deals, fast delivery, and trusted service — curated for Kenya.
+            </p>
+
+            {/* Socials */}
+            <div className="mt-6">
+              <p
+                className="txt-small-plus mb-3"
+                style={{ color: "#916953" }}
+              >
+                Follow us
+              </p>
+
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Instagram"
+                  className="p-2 rounded-full transition hover:opacity-90"
+                  style={{ backgroundColor: "#fcddf2", color: "#916953" }}
+                >
+                  <Instagram className="h-5 w-5" aria-hidden="true" />
+                </a>
+
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Facebook"
+                  className="p-2 rounded-full transition hover:opacity-90"
+                  style={{ backgroundColor: "#fcddf2", color: "#916953" }}
+                >
+                  <Facebook className="h-5 w-5" aria-hidden="true" />
+                </a>
+
+                <a
+                  href="https://twitter.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="X / Twitter"
+                  className="p-2 rounded-full transition hover:opacity-90"
+                  style={{ backgroundColor: "#fcddf2", color: "#916953" }}
+                >
+                  <Twitter className="h-5 w-5" aria-hidden="true" />
+                </a>
+
+                <a
+                  href="https://youtube.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="YouTube"
+                  className="p-2 rounded-full transition hover:opacity-90"
+                  style={{ backgroundColor: "#fcddf2", color: "#916953" }}
+                >
+                  <Youtube className="h-5 w-5" aria-hidden="true" />
+                </a>
+              </div>
+            </div>
           </div>
-          <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3">
-            {productCategories && productCategories?.length > 0 && (
-              <div className="flex flex-col gap-y-2">
-                <span className="txt-small-plus txt-ui-fg-base">
+
+          {/* Links Grid */}
+          <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3 w-full xsmall:w-auto">
+            {/* Categories */}
+            {productCategories && productCategories.length > 0 && (
+              <div className="flex flex-col gap-y-3">
+                <span
+                  className="txt-small-plus"
+                  style={{ color: "#916953" }}
+                >
                   Categories
                 </span>
-                <ul
-                  className="grid grid-cols-1 gap-2"
-                  data-testid="footer-categories"
-                >
-                  {productCategories?.slice(0, 6).map((c) => {
-                    if (c.parent_category) {
-                      return
-                    }
+                <ul className="grid grid-cols-1 gap-2" data-testid="footer-categories">
+                  {productCategories.slice(0, 6).map((c) => {
+                    if (c.parent_category) return null
 
                     const children =
                       c.category_children?.map((child) => ({
@@ -47,33 +123,31 @@ export default async function Footer() {
 
                     return (
                       <li
-                        className="flex flex-col gap-2 text-ui-fg-subtle txt-small"
+                        className="flex flex-col gap-2 txt-small"
+                        style={{ color: "#916953" }}
                         key={c.id}
                       >
                         <LocalizedClientLink
-                          className={clx(
-                            "hover:text-ui-fg-base",
-                            children && "txt-small-plus"
-                          )}
+                          className={clx("hover:opacity-90", children && "txt-small-plus")}
                           href={`/categories/${c.handle}`}
                           data-testid="category-link"
                         >
                           {c.name}
                         </LocalizedClientLink>
+
                         {children && (
                           <ul className="grid grid-cols-1 ml-3 gap-2">
-                            {children &&
-                              children.map((child) => (
-                                <li key={child.id}>
-                                  <LocalizedClientLink
-                                    className="hover:text-ui-fg-base"
-                                    href={`/categories/${child.handle}`}
-                                    data-testid="category-link"
-                                  >
-                                    {child.name}
-                                  </LocalizedClientLink>
-                                </li>
-                              ))}
+                            {children.map((child) => (
+                              <li key={child.id}>
+                                <LocalizedClientLink
+                                  className="hover:opacity-90"
+                                  href={`/categories/${child.handle}`}
+                                  data-testid="category-link"
+                                >
+                                  {child.name}
+                                </LocalizedClientLink>
+                              </li>
+                            ))}
                           </ul>
                         )}
                       </li>
@@ -82,25 +156,25 @@ export default async function Footer() {
                 </ul>
               </div>
             )}
+
+            {/* Collections */}
             {collections && collections.length > 0 && (
-              <div className="flex flex-col gap-y-2">
-                <span className="txt-small-plus txt-ui-fg-base">
+              <div className="flex flex-col gap-y-3">
+                <span
+                  className="txt-small-plus"
+                  style={{ color: "#916953" }}
+                >
                   Collections
                 </span>
                 <ul
-                  className={clx(
-                    "grid grid-cols-1 gap-2 text-ui-fg-subtle txt-small",
-                    {
-                      "grid-cols-2": (collections?.length || 0) > 3,
-                    }
-                  )}
+                  className={clx("grid grid-cols-1 gap-2 txt-small", {
+                    "grid-cols-2": (collections?.length || 0) > 3,
+                  })}
+                  style={{ color: "#916953" }}
                 >
-                  {collections?.slice(0, 6).map((c) => (
+                  {collections.slice(0, 6).map((c) => (
                     <li key={c.id}>
-                      <LocalizedClientLink
-                        className="hover:text-ui-fg-base"
-                        href={`/collections/${c.handle}`}
-                      >
+                      <LocalizedClientLink className="hover:opacity-90" href={`/collections/${c.handle}`}>
                         {c.title}
                       </LocalizedClientLink>
                     </li>
@@ -108,48 +182,75 @@ export default async function Footer() {
                 </ul>
               </div>
             )}
-            <div className="flex flex-col gap-y-2">
-              <span className="txt-small-plus txt-ui-fg-base">Medusa</span>
-              <ul className="grid grid-cols-1 gap-y-2 text-ui-fg-subtle txt-small">
+
+            {/* Help / Contact (replaces Medusa section) */}
+            <div className="flex flex-col gap-y-3">
+              <span
+                className="txt-small-plus"
+                style={{ color: "#916953" }}
+              >
+                Help & Contact
+              </span>
+
+              <ul className="grid grid-cols-1 gap-y-3 txt-small" style={{ color: "#916953" }}>
                 <li>
-                  <a
-                    href="https://github.com/medusajs"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-ui-fg-base"
-                  >
-                    GitHub
-                  </a>
+                  <LocalizedClientLink className="hover:opacity-90" href="/shipping">
+                    Shipping & Delivery
+                  </LocalizedClientLink>
                 </li>
                 <li>
-                  <a
-                    href="https://docs.medusajs.com"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-ui-fg-base"
-                  >
-                    Documentation
-                  </a>
+                  <LocalizedClientLink className="hover:opacity-90" href="/returns">
+                    Returns & Refunds
+                  </LocalizedClientLink>
                 </li>
                 <li>
-                  <a
-                    href="https://github.com/medusajs/nextjs-starter-medusa"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-ui-fg-base"
-                  >
-                    Source code
-                  </a>
+                  <LocalizedClientLink className="hover:opacity-90" href="/contact">
+                    Contact Us
+                  </LocalizedClientLink>
+                </li>
+
+                <li className="pt-2 space-y-2" style={{ color: "#916953" }}>
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" aria-hidden="true" />
+                    <a className="hover:opacity-90" href="mailto:support@bestbuyske.co.ke">
+                      support@bestbuyske.co.ke
+                    </a>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" aria-hidden="true" />
+                    <a className="hover:opacity-90" href="tel:+254700000000">
+                      +254 700 000 000
+                    </a>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" aria-hidden="true" />
+                    <span className="text-ui-fg-subtle">Nairobi, Kenya</span>
+                  </div>
                 </li>
               </ul>
             </div>
           </div>
         </div>
-        <div className="flex w-full mb-16 justify-between text-ui-fg-muted">
-          <Text className="txt-compact-small">
-            © {new Date().getFullYear()} Medusa Store. All rights reserved.
+
+        {/* Bottom bar */}
+        <div
+          className="flex w-full items-center justify-between gap-4 py-6 border-t"
+          style={{ borderColor: "rgba(145, 105, 83, 0.18)" }}
+        >
+          <Text className="txt-compact-small" style={{ color: "#916953" }}>
+            © {new Date().getFullYear()} Best Buys Ke. All rights reserved.
           </Text>
-          <MedusaCTA />
+
+          <div className="flex items-center gap-4 txt-compact-small" style={{ color: "#916953" }}>
+            <LocalizedClientLink className="hover:opacity-90" href="/privacy">
+              Privacy
+            </LocalizedClientLink>
+            <LocalizedClientLink className="hover:opacity-90" href="/terms">
+              Terms
+            </LocalizedClientLink>
+          </div>
         </div>
       </div>
     </footer>
