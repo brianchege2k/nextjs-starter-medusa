@@ -23,31 +23,25 @@ export const getCacheTag = async (tag: string): Promise<string> => {
     const cookies = await nextCookies()
     const cacheId = cookies.get("_medusa_cache_id")?.value
 
-    if (!cacheId) {
-      return ""
-    }
+    // ✅ fallback so server-to-server revalidation works
+    if (!cacheId) return tag
 
     return `${tag}-${cacheId}`
-  } catch (error) {
-    return ""
+  } catch {
+    return tag
   }
 }
+
 
 export const getCacheOptions = async (
   tag: string
 ): Promise<{ tags: string[] } | {}> => {
-  if (typeof window !== "undefined") {
-    return {}
-  }
+  if (typeof window !== "undefined") return {}
 
   const cacheTag = await getCacheTag(tag)
-
-  if (!cacheTag) {
-    return {}
-  }
-
-  return { tags: [`${cacheTag}`] }
+  return { tags: [cacheTag] }
 }
+
 
 export const setAuthToken = async (token: string) => {
   const cookies = await nextCookies()
