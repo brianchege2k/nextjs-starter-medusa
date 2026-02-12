@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server"
 import { revalidateTag, revalidatePath } from "next/cache"
 import { getCacheTag } from "@lib/data/cookies"
 
+// Helpful for verifying the route exists in production
+export async function GET() {
+  return NextResponse.json({ ok: true, route: "/api/revalidate" })
+}
+
 export async function POST(req: NextRequest) {
-  // Check secret (use header OR query param; header is best)
   const secret =
     req.headers.get("x-revalidate-secret") ??
     req.nextUrl.searchParams.get("secret")
@@ -12,22 +16,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 })
   }
 
-  /**
-   * Revalidate the same tags your app uses.
-   * If your getCacheTag() returns null, fall back to static strings.
-   */
-  const tags = await Promise.all([
-    getCacheTag("products"),
-    getCacheTag("categories"),
-    getCacheTag("collections"),
-    getCacheTag("regions"),
-  ])
+  // Allow backend to send tags explicitly: ?tags=a,b,c
+  const raw = req.nextUrl.searchParams.get("tags") || ""
+  const passedTags = raw
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean)
 
-  tags.filter(Boolean).forEach((t) => revalidateTag(t as string))
+  // Fallback tags (must NOT depend on cookies only)
+  const fallbackTags = (
+    await Promise.all([
+      getCacheTag("products"),
+      getCacheTag("categories"),
+      getCacheTag("collections"),
+      getCacheTag("regions"),
+    ])
+  ).filter(Boolean) as string[]
 
-  // Optional: also revalidate common pages/layouts (helps if some parts use path caching)
+  const allTags = Array.from(new Set([...passedTags, ...fallbackTags]))
+
+  allTags.forEach((t) => revalidateTag(t))
+
+  // Optional path revalidation (fine to keep)
   revalidatePath("/", "layout")
   revalidatePath("/store", "layout")
 
-  return NextResponse.json({ revalidated: true, tags: tags.filter(Boolean) })
+  return NextResponse.json({ revalidated: true, tags: allTags })
 }
