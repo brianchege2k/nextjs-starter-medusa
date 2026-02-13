@@ -12,12 +12,12 @@ import { Locale } from "@lib/data/locales"
 
 import { Menu, X, ChevronRight } from "lucide-react"
 
-const SideMenuItems = {
-  Home: "/",
-  Store: "/store",
-  Account: "/account",
-  Cart: "/cart",
-}
+const SideMenuItems = [
+  { name: "Home", href: "/" },
+  { name: "Shop", href: "/store" },
+  { name: "Account", href: "/account" },
+  { name: "Cart", href: "/cart" },
+]
 
 type SideMenuProps = {
   regions: HttpTypes.StoreRegion[] | null
@@ -30,160 +30,137 @@ const SideMenu = ({ regions, locales, currentLocale }: SideMenuProps) => {
   const languageToggleState = useToggleState()
 
   return (
-    <div className="h-full">
-      <div className="flex items-center h-full">
-        <Popover className="h-full flex">
-          {({ open, close }) => (
-            <>
-              <div className="relative flex h-full">
-                <Popover.Button
-                  data-testid="nav-menu-button"
-                  className="relative h-full inline-flex items-center gap-2 px-3 rounded-md transition focus:outline-none hover:opacity-90"
-                  style={{ color: "#916953" }}
-                  aria-label="Open menu"
-                >
-                  <Menu className="h-5 w-5" aria-hidden="true" />
-                  <span className="hidden small:inline">Menu</span>
-                </Popover.Button>
-              </div>
-
-              {open && (
-                <div
-                  className="fixed inset-0 z-[50] pointer-events-auto"
-                  onClick={close}
-                  data-testid="side-menu-backdrop"
-                  style={{
-                    background: "rgba(145, 105, 83, 0.18)", // subtle tinted overlay
-                    backdropFilter: "blur(6px)",
-                  }}
-                />
-              )}
-
-              <Transition
-                show={open}
-                as={Fragment}
-                enter="transition ease-out duration-150"
-                enterFrom="opacity-0"
-                enterTo="opacity-100"
-                leave="transition ease-in duration-150"
-                leaveFrom="opacity-100"
-                leaveTo="opacity-0"
+    <div className="h-full flex items-center">
+      <Popover className="h-full flex">
+        {({ open, close }) => (
+          <>
+            {/* Trigger (hamburger) */}
+            <div className="relative flex h-full items-center">
+              <Popover.Button
+                data-testid="nav-menu-button"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-ui-bg-base-hover focus:outline-none"
+                aria-label="Open menu"
               >
-                <PopoverPanel className="flex flex-col absolute w-full pr-4 sm:pr-0 sm:w-1/3 2xl:w-1/4 sm:min-w-min h-[calc(100vh-1rem)] z-[51] inset-x-0 text-sm m-2">
-                  <div
-                    data-testid="nav-menu-popup"
-                    className="flex flex-col h-full rounded-rounded justify-between p-6 border shadow-sm"
-                    style={{
-                      backgroundColor: "#faf6f6",
-                      borderColor: "rgba(145, 105, 83, 0.18)",
-                    }}
-                  >
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                      <LocalizedClientLink
-                        href="/"
-                        onClick={close}
-                        className="txt-compact-large-plus uppercase hover:opacity-90"
-                        style={{ color: "#916953" }}
-                      >
+                <Menu className="h-5 w-5 text-black" aria-hidden="true" />
+              </Popover.Button>
+            </div>
+
+            {/* Backdrop */}
+            {open && (
+              <div
+                className="fixed inset-0 z-[50] bg-black/30"
+                onClick={close}
+                data-testid="side-menu-backdrop"
+              />
+            )}
+
+            <Transition
+              show={open}
+              as={Fragment}
+              enter="transition ease-out duration-200"
+              enterFrom="opacity-0 translate-x-2"
+              enterTo="opacity-100 translate-x-0"
+              leave="transition ease-in duration-150"
+              leaveFrom="opacity-100 translate-x-0"
+              leaveTo="opacity-0 translate-x-2"
+            >
+              <PopoverPanel className="fixed z-[51] inset-y-0 left-0 w-[88%] max-w-sm">
+                <div
+                  data-testid="nav-menu-popup"
+                  className="flex h-full flex-col bg-white shadow-xl"
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-5 h-16 border-b border-ui-border-base">
+                    <LocalizedClientLink
+                      href="/"
+                      onClick={close}
+                      className="flex items-center gap-2"
+                    >
+                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#B88E2F] text-white text-xs font-semibold">
+                        BB
+                      </span>
+                      <span className="text-base font-semibold text-black">
                         Best Buys Ke
-                      </LocalizedClientLink>
+                      </span>
+                    </LocalizedClientLink>
 
-                      <button
-                        data-testid="close-menu-button"
-                        onClick={close}
-                        aria-label="Close menu"
-                        className="p-2 rounded-full transition hover:opacity-90"
-                        style={{ backgroundColor: "#fcddf2", color: "#916953" }}
-                      >
-                        <X className="h-5 w-5" aria-hidden="true" />
-                      </button>
-                    </div>
+                    <button
+                      data-testid="close-menu-button"
+                      onClick={close}
+                      aria-label="Close menu"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-ui-bg-base-hover"
+                    >
+                      <X className="h-5 w-5 text-black" aria-hidden="true" />
+                    </button>
+                  </div>
 
-                    {/* Links */}
-                    <ul className="flex flex-col gap-4 items-start justify-start mt-8">
-                      {Object.entries(SideMenuItems).map(([name, href]) => (
-                        <li key={name} className="w-full">
+                  {/* Links */}
+                  <div className="px-5 py-6">
+                    <ul className="flex flex-col">
+                      {SideMenuItems.map((item) => (
+                        <li key={item.name} className="border-b border-ui-border-base">
                           <LocalizedClientLink
-                            href={href}
+                            href={item.href}
                             onClick={close}
-                            data-testid={`${name.toLowerCase()}-link`}
-                            className="w-full flex items-center justify-between rounded-lg px-3 py-3 transition hover:opacity-90"
-                            style={{
-                              backgroundColor: "#fcddf2",
-                              color: "#916953",
-                            }}
+                            data-testid={`${item.name.toLowerCase()}-link`}
+                            className="flex items-center justify-between py-4 text-[15px] font-medium text-black hover:opacity-70"
                           >
-                            <span className="text-xl leading-8">{name}</span>
-                            <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                            {item.name}
+                            <ChevronRight className="h-4 w-4 text-black/60" />
                           </LocalizedClientLink>
                         </li>
                       ))}
                     </ul>
+                  </div>
 
-                    {/* Locale + Region */}
-                    <div className="flex flex-col gap-y-6 mt-10">
-                      {!!locales?.length && (
-                        <div
-                          className="flex items-center justify-between rounded-lg px-3 py-3"
-                          style={{ backgroundColor: "#faf6f6" }}
-                          onMouseEnter={languageToggleState.open}
-                          onMouseLeave={languageToggleState.close}
-                        >
-                          <LanguageSelect
-                            toggleState={languageToggleState}
-                            locales={locales}
-                            currentLocale={currentLocale}
-                          />
-                          <ChevronRight
-                            className={clx(
-                              "h-5 w-5 transition-transform duration-150",
-                              languageToggleState.state ? "-rotate-90" : ""
-                            )}
-                            style={{ color: "#916953" }}
-                          />
-                        </div>
-                      )}
-
+                  {/* Locale + Region (bottom) */}
+                  <div className="mt-auto border-t border-ui-border-base px-5 py-5 space-y-3">
+                    {!!locales?.length && (
                       <div
-                        className="flex items-center justify-between rounded-lg px-3 py-3"
-                        style={{ backgroundColor: "#faf6f6" }}
-                        onMouseEnter={countryToggleState.open}
-                        onMouseLeave={countryToggleState.close}
+                        className="flex items-center justify-between rounded-md px-3 py-3 hover:bg-ui-bg-base-hover"
+                        onMouseEnter={languageToggleState.open}
+                        onMouseLeave={languageToggleState.close}
                       >
-                        {regions && (
-                          <CountrySelect
-                            toggleState={countryToggleState}
-                            regions={regions}
-                          />
-                        )}
+                        <LanguageSelect
+                          toggleState={languageToggleState}
+                          locales={locales}
+                          currentLocale={currentLocale}
+                        />
                         <ChevronRight
                           className={clx(
-                            "h-5 w-5 transition-transform duration-150",
-                            countryToggleState.state ? "-rotate-90" : ""
+                            "h-4 w-4 text-black/60 transition-transform duration-150",
+                            languageToggleState.state ? "-rotate-90" : ""
                           )}
-                          style={{ color: "#916953" }}
                         />
                       </div>
+                    )}
 
-                      <Text
-                        className="flex justify-between txt-compact-small pt-4 border-t"
-                        style={{
-                          color: "#916953",
-                          borderColor: "rgba(145, 105, 83, 0.18)",
-                        }}
-                      >
-                        © {new Date().getFullYear()} Best Buys Ke. All rights
-                        reserved.
-                      </Text>
+                    <div
+                      className="flex items-center justify-between rounded-md px-3 py-3 hover:bg-ui-bg-base-hover"
+                      onMouseEnter={countryToggleState.open}
+                      onMouseLeave={countryToggleState.close}
+                    >
+                      {regions && (
+                        <CountrySelect toggleState={countryToggleState} regions={regions} />
+                      )}
+                      <ChevronRight
+                        className={clx(
+                          "h-4 w-4 text-black/60 transition-transform duration-150",
+                          countryToggleState.state ? "-rotate-90" : ""
+                        )}
+                      />
                     </div>
+
+                    <Text className="txt-compact-small text-black/50 pt-2">
+                      © {new Date().getFullYear()} Best Buys Ke. All rights reserved.
+                    </Text>
                   </div>
-                </PopoverPanel>
-              </Transition>
-            </>
-          )}
-        </Popover>
-      </div>
+                </div>
+              </PopoverPanel>
+            </Transition>
+          </>
+        )}
+      </Popover>
     </div>
   )
 }

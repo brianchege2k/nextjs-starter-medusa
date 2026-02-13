@@ -16,12 +16,14 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Thumbnail from "@modules/products/components/thumbnail"
 import { usePathname } from "next/navigation"
 import { Fragment, useEffect, useRef, useState } from "react"
-import { ShoppingBag } from "lucide-react"
+import { ShoppingCart } from "lucide-react"
 
 const CartDropdown = ({
   cart: cartState,
+  variant = "default",
 }: {
   cart?: HttpTypes.StoreCart | null
+  variant?: "default" | "icon"
 }) => {
   const [activeTimer, setActiveTimer] = useState<NodeJS.Timer | undefined>(
     undefined
@@ -41,32 +43,23 @@ const CartDropdown = ({
 
   const timedOpen = () => {
     open()
-
     const timer = setTimeout(close, 5000)
-
     setActiveTimer(timer)
   }
 
   const openAndCancel = () => {
-    if (activeTimer) {
-      clearTimeout(activeTimer)
-    }
-
+    if (activeTimer) clearTimeout(activeTimer)
     open()
   }
 
-  // Clean up the timer when the component unmounts
   useEffect(() => {
     return () => {
-      if (activeTimer) {
-        clearTimeout(activeTimer)
-      }
+      if (activeTimer) clearTimeout(activeTimer)
     }
   }, [activeTimer])
 
   const pathname = usePathname()
 
-  // open cart dropdown when modifying the cart items, but only if we're not on the cart page
   useEffect(() => {
     if (itemRef.current !== totalItems && !pathname.includes("/cart")) {
       timedOpen()
@@ -82,27 +75,44 @@ const CartDropdown = ({
     >
       <Popover className="relative h-full">
         <PopoverButton className="h-full">
-          <LocalizedClientLink
-            href="/cart"
-            data-testid="nav-cart-link"
-            className="h-full inline-flex items-center gap-2 px-3 rounded-md transition hover:opacity-90"
-            style={{ color: "#916953" }}
-          >
-            <ShoppingBag className="h-4 w-4" aria-hidden="true" />
-
-            <span className="hidden small:inline">{`Cart`}</span>
-
-            <span
-              className="ml-1 inline-flex items-center justify-center min-w-[22px] h-[22px] px-2 rounded-full text-[12px] leading-none"
-              style={{
-                backgroundColor: "#fcddf2",
-                color: "#916953",
-              }}
-              aria-label={`Cart items: ${totalItems}`}
+          {variant === "icon" ? (
+            <LocalizedClientLink
+              href="/cart"
+              data-testid="nav-cart-link"
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-ui-bg-base-hover"
+              aria-label={`Cart (${totalItems})`}
             >
-              {totalItems}
-            </span>
-          </LocalizedClientLink>
+              <ShoppingCart className="h-5 w-5 text-black" aria-hidden="true" />
+
+              {/* Badge */}
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#B88E2F] text-white text-[11px] leading-[18px] text-center font-semibold">
+                  {totalItems}
+                </span>
+              )}
+            </LocalizedClientLink>
+          ) : (
+            // fallback to your older style if needed anywhere else
+            <LocalizedClientLink
+              href="/cart"
+              data-testid="nav-cart-link"
+              className="h-full inline-flex items-center gap-2 px-3 rounded-md transition hover:opacity-90"
+              style={{ color: "#916953" }}
+            >
+              <ShoppingCart className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden small:inline">{`Cart`}</span>
+              <span
+                className="ml-1 inline-flex items-center justify-center min-w-[22px] h-[22px] px-2 rounded-full text-[12px] leading-none"
+                style={{
+                  backgroundColor: "#fcddf2",
+                  color: "#916953",
+                }}
+                aria-label={`Cart items: ${totalItems}`}
+              >
+                {totalItems}
+              </span>
+            </LocalizedClientLink>
+          )}
         </PopoverButton>
 
         <Transition
@@ -117,19 +127,11 @@ const CartDropdown = ({
         >
           <PopoverPanel
             static
-            className="hidden small:block absolute top-[calc(100%+1px)] right-0 border-x border-b w-[420px] text-ui-fg-base"
-            style={{
-              backgroundColor: "#faf6f6",
-              borderColor: "rgba(145, 105, 83, 0.18)",
-            }}
+            className="hidden small:block absolute top-[calc(100%+1px)] right-0 w-[420px] border border-ui-border-base bg-white text-ui-fg-base shadow-lg"
             data-testid="nav-cart-dropdown"
           >
-            <div className="p-4 flex items-center justify-center border-b"
-              style={{ borderColor: "rgba(145, 105, 83, 0.18)" }}
-            >
-              <h3 className="text-large-semi" style={{ color: "#916953" }}>
-                Cart
-              </h3>
+            <div className="p-4 flex items-center justify-center border-b border-ui-border-base">
+              <h3 className="text-large-semi text-black">Cart</h3>
             </div>
 
             {cartState && cartState.items?.length ? (
@@ -162,14 +164,11 @@ const CartDropdown = ({
                           <div className="flex flex-col flex-1">
                             <div className="flex items-start justify-between">
                               <div className="flex flex-col overflow-ellipsis whitespace-nowrap mr-4 w-[180px]">
-                                <h3
-                                  className="text-base-regular overflow-hidden text-ellipsis"
-                                  style={{ color: "#916953" }}
-                                >
+                                <h3 className="text-base-regular overflow-hidden text-ellipsis text-black">
                                   <LocalizedClientLink
                                     href={`/products/${item.product_handle}`}
                                     data-testid="product-link"
-                                    className="hover:opacity-90"
+                                    className="hover:opacity-70"
                                   >
                                     {item.title}
                                   </LocalizedClientLink>
@@ -212,19 +211,16 @@ const CartDropdown = ({
                     ))}
                 </div>
 
-                <div className="p-4 flex flex-col gap-y-4 text-small-regular border-t"
-                  style={{ borderColor: "rgba(145, 105, 83, 0.18)" }}
-                >
+                <div className="p-4 flex flex-col gap-y-4 text-small-regular border-t border-ui-border-base">
                   <div className="flex items-center justify-between">
-                    <span style={{ color: "#916953" }} className="font-semibold">
+                    <span className="text-black font-semibold">
                       Subtotal <span className="font-normal">(excl. taxes)</span>
                     </span>
 
                     <span
-                      className="text-large-semi"
+                      className="text-large-semi text-black"
                       data-testid="cart-subtotal"
                       data-value={subtotal}
-                      style={{ color: "#916953" }}
                     >
                       {convertToLocale({
                         amount: subtotal,
@@ -239,8 +235,8 @@ const CartDropdown = ({
                       size="large"
                       data-testid="go-to-cart-button"
                       style={{
-                        backgroundColor: "#916953",
-                        color: "#faf6f6",
+                        backgroundColor: "#B88E2F",
+                        color: "white",
                       }}
                     >
                       Go to cart
@@ -250,10 +246,7 @@ const CartDropdown = ({
               </>
             ) : (
               <div className="flex py-16 flex-col gap-y-4 items-center justify-center">
-                <div
-                  className="text-small-regular flex items-center justify-center w-9 h-9 rounded-full"
-                  style={{ backgroundColor: "#fcddf2", color: "#916953" }}
-                >
+                <div className="text-small-regular flex items-center justify-center w-9 h-9 rounded-full bg-[#FFF3E3] text-black">
                   <span className="font-semibold">0</span>
                 </div>
 
@@ -265,8 +258,8 @@ const CartDropdown = ({
                     <Button
                       onClick={close}
                       style={{
-                        backgroundColor: "#916953",
-                        color: "#faf6f6",
+                        backgroundColor: "#B88E2F",
+                        color: "white",
                       }}
                     >
                       Explore products
