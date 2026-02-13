@@ -15,9 +15,9 @@ export default async function Footer() {
             </LocalizedClientLink>
 
             <p className="mt-6 text-sm text-black/50 leading-relaxed max-w-sm">
-              400 University Drive Suite 200 Coral Gables,
+              Nairobi
               <br />
-              FL 33134 USA
+              Kenya
             </p>
           </div>
 
