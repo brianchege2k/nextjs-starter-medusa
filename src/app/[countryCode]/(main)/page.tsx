@@ -4,7 +4,8 @@ import { Metadata } from "next"
 import Hero from "@modules/home/components/hero"
 // import FeaturedProducts from "@modules/home/components/featured-products"
 import CategoryShowcase from "@modules/home/components/category-showcase"
-import CategoryTemplate from "../../../modules/categories/templates"
+import AllProducts from "@modules/home/components/all-products"
+
 import { getRegion } from "@lib/data/regions"
 import { listCollections } from "@lib/data/collections"
 
@@ -40,6 +41,7 @@ export default async function Home(props: {
         <ul className="flex flex-col gap-x-6">
           {/* <FeaturedProducts collections={collections} region={region} /> */}
           <CategoryShowcase />
+          <AllProducts region={region} />
         </ul>
       </div>
     </>
