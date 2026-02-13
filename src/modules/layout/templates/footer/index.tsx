@@ -1,258 +1,103 @@
-import { listCategories } from "@lib/data/categories"
-import { listCollections } from "@lib/data/collections"
-import { Text, clx } from "@medusajs/ui"
-
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
-import {
-  Instagram,
-  Facebook,
-  Twitter,
-  Youtube,
-  Mail,
-  Phone,
-  MapPin,
-} from "lucide-react"
-
 export default async function Footer() {
-  const { collections } = await listCollections({
-    fields: "*products",
-  })
-  const productCategories = await listCategories()
-
   return (
-    <footer
-      className="border-t border-ui-border-base w-full"
-      style={{ backgroundColor: "#faf6f6" }}
-    >
-      <div className="content-container flex flex-col w-full">
-        {/* Top Section */}
-        <div className="flex flex-col gap-y-10 xsmall:flex-row items-start justify-between py-24">
-          {/* Brand + short pitch + socials */}
-          <div className="max-w-sm">
+    <footer className="border-t border-ui-border-base bg-white">
+      <div className="content-container py-12 small:py-16">
+        <div className="grid grid-cols-1 gap-10 small:grid-cols-2 large:grid-cols-4">
+          {/* Brand */}
+          <div>
             <LocalizedClientLink
               href="/"
-              className="txt-compact-xlarge-plus uppercase inline-flex items-center"
-              style={{ color: "#916953" }}
+              className="text-xl font-semibold text-black hover:opacity-70"
             >
               Best Buys Ke
             </LocalizedClientLink>
 
-            <p className="mt-3 txt-small text-ui-fg-subtle">
-              Quality deals, fast delivery, and trusted service — curated for Kenya.
+            <p className="mt-6 text-sm text-black/50 leading-relaxed max-w-sm">
+              400 University Drive Suite 200 Coral Gables,
+              <br />
+              FL 33134 USA
             </p>
-
-            {/* Socials */}
-            <div className="mt-6">
-              <p
-                className="txt-small-plus mb-3"
-                style={{ color: "#916953" }}
-              >
-                Follow us
-              </p>
-
-              <div className="flex items-center gap-3">
-                <a
-                  href="https://instagram.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Instagram"
-                  className="p-2 rounded-full transition hover:opacity-90"
-                  style={{ backgroundColor: "#fcddf2", color: "#916953" }}
-                >
-                  <Instagram className="h-5 w-5" aria-hidden="true" />
-                </a>
-
-                <a
-                  href="https://facebook.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="Facebook"
-                  className="p-2 rounded-full transition hover:opacity-90"
-                  style={{ backgroundColor: "#fcddf2", color: "#916953" }}
-                >
-                  <Facebook className="h-5 w-5" aria-hidden="true" />
-                </a>
-
-                <a
-                  href="https://twitter.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="X / Twitter"
-                  className="p-2 rounded-full transition hover:opacity-90"
-                  style={{ backgroundColor: "#fcddf2", color: "#916953" }}
-                >
-                  <Twitter className="h-5 w-5" aria-hidden="true" />
-                </a>
-
-                <a
-                  href="https://youtube.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="YouTube"
-                  className="p-2 rounded-full transition hover:opacity-90"
-                  style={{ backgroundColor: "#fcddf2", color: "#916953" }}
-                >
-                  <Youtube className="h-5 w-5" aria-hidden="true" />
-                </a>
-              </div>
-            </div>
           </div>
 
-          {/* Links Grid */}
-          <div className="text-small-regular gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3 w-full xsmall:w-auto">
-            {/* Categories */}
-            {productCategories && productCategories.length > 0 && (
-              <div className="flex flex-col gap-y-3">
-                <span
-                  className="txt-small-plus"
-                  style={{ color: "#916953" }}
-                >
-                  Categories
-                </span>
-                <ul className="grid grid-cols-1 gap-2" data-testid="footer-categories">
-                  {productCategories.slice(0, 6).map((c) => {
-                    if (c.parent_category) return null
+          {/* Links */}
+          <div>
+            <p className="text-sm font-medium text-black/50">Links</p>
+            <ul className="mt-6 space-y-4 text-sm font-medium text-black">
+              <li>
+                <LocalizedClientLink href="/" className="hover:opacity-70">
+                  Home
+                </LocalizedClientLink>
+              </li>
+              <li>
+                <LocalizedClientLink href="/store" className="hover:opacity-70">
+                  Shop
+                </LocalizedClientLink>
+              </li>
+              <li>
+                <LocalizedClientLink href="/about" className="hover:opacity-70">
+                  About
+                </LocalizedClientLink>
+              </li>
+              <li>
+                <LocalizedClientLink href="/contact" className="hover:opacity-70">
+                  Contact
+                </LocalizedClientLink>
+              </li>
+            </ul>
+          </div>
 
-                    const children =
-                      c.category_children?.map((child) => ({
-                        name: child.name,
-                        handle: child.handle,
-                        id: child.id,
-                      })) || null
+          {/* Help */}
+          <div>
+            <p className="text-sm font-medium text-black/50">Help</p>
+            <ul className="mt-6 space-y-4 text-sm font-medium text-black">
+              <li>
+                <LocalizedClientLink href="/payment-options" className="hover:opacity-70">
+                  Payment Options
+                </LocalizedClientLink>
+              </li>
+              <li>
+                <LocalizedClientLink href="/shipping-returns" className="hover:opacity-70">
+                  Returns
+                </LocalizedClientLink>
+              </li>
+              <li>
+                <LocalizedClientLink href="/privacy" className="hover:opacity-70">
+                  Privacy Policies
+                </LocalizedClientLink>
+              </li>
+            </ul>
+          </div>
 
-                    return (
-                      <li
-                        className="flex flex-col gap-2 txt-small"
-                        style={{ color: "#916953" }}
-                        key={c.id}
-                      >
-                        <LocalizedClientLink
-                          className={clx("hover:opacity-90", children && "txt-small-plus")}
-                          href={`/categories/${c.handle}`}
-                          data-testid="category-link"
-                        >
-                          {c.name}
-                        </LocalizedClientLink>
+          {/* Newsletter */}
+          <div>
+            <p className="text-sm font-medium text-black/50">Newsletter</p>
 
-                        {children && (
-                          <ul className="grid grid-cols-1 ml-3 gap-2">
-                            {children.map((child) => (
-                              <li key={child.id}>
-                                <LocalizedClientLink
-                                  className="hover:opacity-90"
-                                  href={`/categories/${child.handle}`}
-                                  data-testid="category-link"
-                                >
-                                  {child.name}
-                                </LocalizedClientLink>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </li>
-                    )
-                  })}
-                </ul>
-              </div>
-            )}
-
-            {/* Collections */}
-            {collections && collections.length > 0 && (
-              <div className="flex flex-col gap-y-3">
-                <span
-                  className="txt-small-plus"
-                  style={{ color: "#916953" }}
-                >
-                  Collections
-                </span>
-                <ul
-                  className={clx("grid grid-cols-1 gap-2 txt-small", {
-                    "grid-cols-2": (collections?.length || 0) > 3,
-                  })}
-                  style={{ color: "#916953" }}
-                >
-                  {collections.slice(0, 6).map((c) => (
-                    <li key={c.id}>
-                      <LocalizedClientLink className="hover:opacity-90" href={`/collections/${c.handle}`}>
-                        {c.title}
-                      </LocalizedClientLink>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Help / Contact (replaces Medusa section) */}
-            <div className="flex flex-col gap-y-3">
-              <span
-                className="txt-small-plus"
-                style={{ color: "#916953" }}
+            <form className="mt-6 flex items-center gap-3">
+              <input
+                type="email"
+                placeholder="Enter Your Email Address"
+                className="w-full border-b border-black/30 px-0 py-2 text-sm text-black placeholder:text-black/40 focus:outline-none focus:border-black"
+              />
+              <button
+                type="submit"
+                className="shrink-0 border-b border-black py-2 text-sm font-semibold text-black hover:opacity-70"
               >
-                Help & Contact
-              </span>
-
-              <ul className="grid grid-cols-1 gap-y-3 txt-small" style={{ color: "#916953" }}>
-                <li>
-                  <LocalizedClientLink className="hover:opacity-90" href="/shipping">
-                    Shipping & Delivery
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink className="hover:opacity-90" href="/returns">
-                    Returns & Refunds
-                  </LocalizedClientLink>
-                </li>
-                <li>
-                  <LocalizedClientLink className="hover:opacity-90" href="/contact">
-                    Contact Us
-                  </LocalizedClientLink>
-                </li>
-
-                <li className="pt-2 space-y-2" style={{ color: "#916953" }}>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" aria-hidden="true" />
-                    <a className="hover:opacity-90" href="mailto:support@bestbuyske.co.ke">
-                      support@bestbuyske.co.ke
-                    </a>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" aria-hidden="true" />
-                    <a className="hover:opacity-90" href="tel:+254700000000">
-                      +254 700 000 000
-                    </a>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" aria-hidden="true" />
-                    <span className="text-ui-fg-subtle">Nairobi, Kenya</span>
-                  </div>
-                </li>
-              </ul>
-            </div>
+                SUBSCRIBE
+              </button>
+            </form>
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div
-          className="flex w-full items-center justify-between gap-4 py-6 border-t"
-          style={{ borderColor: "rgba(145, 105, 83, 0.18)" }}
-        >
-          <Text className="txt-compact-small" style={{ color: "#916953" }}>
-            © {new Date().getFullYear()} Best Buys Ke. All rights reserved.
-          </Text>
-
-          <div className="flex items-center gap-4 txt-compact-small" style={{ color: "#916953" }}>
-            <LocalizedClientLink className="hover:opacity-90" href="/privacy">
-              Privacy
-            </LocalizedClientLink>
-            <LocalizedClientLink className="hover:opacity-90" href="/terms">
-              Terms
-            </LocalizedClientLink>
-          </div>
+        {/* Bottom */}
+        <div className="mt-12 border-t border-ui-border-base pt-6">
+          <p className="text-sm text-black/70">
+            © {new Date().getFullYear()} Best Buys Ke. All rights reserved
+          </p>
         </div>
       </div>
     </footer>
   )
 }
+
