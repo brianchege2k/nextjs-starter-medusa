@@ -2,7 +2,9 @@
 import { Metadata } from "next"
 
 import Hero from "@modules/home/components/hero"
-import FeaturedProducts from "@modules/home/components/featured-products"
+// import FeaturedProducts from "@modules/home/components/featured-products"
+import CategoryShowcase from "@modules/home/components/category-showcase"
+import CategoryTemplate from "../../../modules/categories/templates"
 import { getRegion } from "@lib/data/regions"
 import { listCollections } from "@lib/data/collections"
 
@@ -36,7 +38,8 @@ export default async function Home(props: {
       {/* Categories rendered using the CategoryTemplate-style block */}
 <div className="py-12">
         <ul className="flex flex-col gap-x-6">
-          <FeaturedProducts collections={collections} region={region} />
+          {/* <FeaturedProducts collections={collections} region={region} /> */}
+          <CategoryShowcase />
         </ul>
       </div>
     </>
