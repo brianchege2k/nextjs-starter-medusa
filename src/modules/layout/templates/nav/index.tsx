@@ -113,16 +113,12 @@ export default async function Nav() {
               </LocalizedClientLink>
 
               {/* Keep CartButton behavior (count, etc.) but style around it */}
-              <div className="flex flex-col items-center gap-1 text-xs text-ui-fg-subtle hover:text-ui-fg-base">
-                <div className="h-5 w-5">
-                  <ShoppingCart className="h-5 w-5" />
-                </div>
+<div className="text-xs text-ui-fg-subtle hover:text-ui-fg-base">
+  <Suspense fallback={<span>Cart</span>}>
+    <CartButton />
+  </Suspense>
+</div>
 
-                {/* CartButton usually renders link + count. Keep it for logic. */}
-                <Suspense fallback={<span>Cart</span>}>
-                  <CartButton />
-                </Suspense>
-              </div>
             </div>
           </div>
 
