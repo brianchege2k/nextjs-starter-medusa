@@ -55,7 +55,7 @@ export default async function Nav() {
 
               <div className="hidden md:flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                <span>Bihi Towers,11th Floor,Suite 2 -Moi Avenue Nairobi CBD</span>
+                <span>Nairobi CBD</span>
               </div>
             </div>
 

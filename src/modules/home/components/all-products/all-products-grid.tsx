@@ -40,11 +40,12 @@ export default function AllProductsGrid({
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4 small:gap-6 small:grid-cols-3 large:grid-cols-4">
-        {products.map((p) => (
-          <ProductPreview key={p.id} product={p} region={region} />
-        ))}
-      </div>
+<div className="grid grid-cols-2 gap-3 small:grid-cols-3 small:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+  {products.map((p) => (
+    <ProductPreview key={p.id} product={p} region={region} />
+  ))}
+</div>
+
 
       {/* Show more like design */}
       {nextPage && products.length < totalCount && (
