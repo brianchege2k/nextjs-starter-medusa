@@ -5,6 +5,7 @@ import Hero from "@modules/home/components/hero"
 // import FeaturedProducts from "@modules/home/components/featured-products"
 import CategoryShowcase from "@modules/home/components/category-showcase"
 import AllProducts from "@modules/home/components/all-products"
+import CollectionsGrid from "@modules/home/components/collections-grid"
 
 import { getRegion } from "@lib/data/regions"
 import { listCollections } from "@lib/data/collections"
@@ -35,6 +36,8 @@ export default async function Home(props: {
   return (
     <>
       <Hero />
+      <CollectionsGrid />
+
 
       {/* Categories rendered using the CategoryTemplate-style block */}
 <div className="py-12">
