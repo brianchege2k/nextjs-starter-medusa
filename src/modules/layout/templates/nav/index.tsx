@@ -17,7 +17,6 @@ import {
   Truck,
   MapPin,
   User,
-  ShoppingCart,
 } from "lucide-react"
 
 export default async function Nav() {
@@ -70,7 +69,9 @@ export default async function Nav() {
       {/* Main header (white) */}
       <header className="w-full border-b border-ui-border-base bg-white">
         <div className="content-container">
-          <div className="flex h-20 items-center justify-between gap-4">
+          {/* ADJUSTED: Changed h-20 to min-h-24 (96px) to accommodate larger logo */}
+          <div className="flex min-h-[96px] items-center justify-between gap-4 py-2">
+            
             {/* Left: burger + logo */}
             <div className="flex flex-1 items-center gap-3">
               <div className="h-full flex items-center">
@@ -86,19 +87,20 @@ export default async function Nav() {
                 className="flex items-center gap-2"
                 aria-label="Home"
               >
+                {/* ADJUSTED: Increased width/height props and changed className to h-16 */}
                 <Image
                   src="/images/logo.png"
                   alt="Store logo"
-                  width={150}
-                  height={60}
+                  width={300}
+                  height={120}
                   priority
-                  className="h-12 w-auto"
+                  className="h-16 w-auto object-contain"
                 />
               </LocalizedClientLink>
             </div>
 
             {/* Center: search */}
-            <div className="hidden md:flex flex-[1.2] justify-center">
+            <div className="hidden md:flex flex-[1.5] justify-center">
               <NavSearch />
             </div>
 
@@ -112,13 +114,11 @@ export default async function Nav() {
                 <span>My Account</span>
               </LocalizedClientLink>
 
-              {/* Keep CartButton behavior (count, etc.) but style around it */}
-<div className="text-xs text-ui-fg-subtle hover:text-ui-fg-base">
-  <Suspense fallback={<span>Cart</span>}>
-    <CartButton />
-  </Suspense>
-</div>
-
+              <div className="text-xs text-ui-fg-subtle hover:text-ui-fg-base">
+                <Suspense fallback={<span>Cart</span>}>
+                  <CartButton />
+                </Suspense>
+              </div>
             </div>
           </div>
 
