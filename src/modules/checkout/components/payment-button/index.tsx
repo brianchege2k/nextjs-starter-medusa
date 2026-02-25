@@ -83,7 +83,7 @@ const MpesaPaymentButton = ({
   const [isWaitingForPin, setIsWaitingForPin] = useState(false)
   const router = useRouter()
 
-  const handlePayment = async () => {
+const handlePayment = async () => {
     if (!phone || phone.length < 9) {
       setErrorMessage("Please enter a valid Safaricom number.")
       return
@@ -93,32 +93,41 @@ const MpesaPaymentButton = ({
     setErrorMessage(null)
 
     try {
-      // Call the custom backend endpoint we built earlier
       const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/mpesa/stk-push`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          // ADD THIS HEADER - It is mandatory for Medusa V2
+          "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "" 
+        },
         body: JSON.stringify({
           phone: phone, 
-          amount: cart.total, // Medusa passes this down
+          amount: cart.total, 
           cart_id: cart.id
         })
       })
       
+      // Check if response is empty or unauthorized before calling .json()
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("Server Error:", errorText)
+        throw new Error(`Error: ${response.status} - Please check backend logs.`)
+      }
+
       const data = await response.json()
       
-      if (response.ok && data.success) {
-        // Transition to the waiting/polling UI.
+      if (data.success) {
         setIsWaitingForPin(true)
       } else {
-        setErrorMessage("Failed to initiate STK push. Please check your credentials.")
+        setErrorMessage(data.message || "Failed to initiate STK push.")
       }
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to initiate M-Pesa payment.")
+      console.error("Mpesa Error:", err)
+      setErrorMessage(err.message || "Failed to connect to the server.")
     } finally {
       setSubmitting(false)
     }
   }
-
   // Poll the Medusa backend to see if the Daraja webhook has completed the cart
   useEffect(() => {
     let pollingInterval: NodeJS.Timeout
