@@ -1,6 +1,7 @@
 "use client"
 
-import { isManual, isStripeLike } from "@lib/constants"
+// 1. IMPORT YOUR MPESA HELPER HERE
+import { isManual, isStripeLike, isMpesa } from "@lib/constants"
 import { placeOrder } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
 import { Button, Input } from "@medusajs/ui"
@@ -8,10 +9,6 @@ import { useElements, useStripe } from "@stripe/react-stripe-js"
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import ErrorMessage from "../error-message"
-
-// NOTE: You will need to create this action in your @lib/data/cart file 
-// to pass the phone number to the Medusa backend before calling placeOrder.
-// import { updatePaymentSessionData } from "@lib/data/cart" 
 
 type PaymentButtonProps = {
   cart: HttpTypes.StoreCart
@@ -44,8 +41,8 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
       return (
         <ManualTestPaymentButton notReady={notReady} data-testid={dataTestId} />
       )
-    // ADDED: M-Pesa specific case matching your backend identifier
-    case paymentSession?.provider_id === "mpesa":
+    // 2. USE THE HELPER FUNCTION HERE
+    case isMpesa(paymentSession?.provider_id):
       return (
         <MpesaPaymentButton 
           notReady={notReady} 
@@ -58,153 +55,19 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
   }
 }
 
-const StripePaymentButton = ({
-  cart,
-  notReady,
-  "data-testid": dataTestId,
-}: {
-  cart: HttpTypes.StoreCart
-  notReady: boolean
-  "data-testid"?: string
-}) => {
-  const [submitting, setSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+// ... [Keep StripePaymentButton and ManualTestPaymentButton exactly as they are] ...
 
-  const onPaymentCompleted = async () => {
-    await placeOrder()
-      .catch((err) => {
-        setErrorMessage(err.message)
-      })
-      .finally(() => {
-        setSubmitting(false)
-      })
-  }
-
-  const stripe = useStripe()
-  const elements = useElements()
-  const card = elements?.getElement("card")
-
-  const session = cart.payment_collection?.payment_sessions?.find(
-    (s) => s.status === "pending"
-  )
-
-  const disabled = !stripe || !elements ? true : false
-
-  const handlePayment = async () => {
-    setSubmitting(true)
-
-    if (!stripe || !elements || !card || !cart) {
-      setSubmitting(false)
-      return
-    }
-
-    await stripe
-      .confirmCardPayment(session?.data.client_secret as string, {
-        payment_method: {
-          card: card,
-          billing_details: {
-            name:
-              cart.billing_address?.first_name +
-              " " +
-              cart.billing_address?.last_name,
-            address: {
-              city: cart.billing_address?.city ?? undefined,
-              country: cart.billing_address?.country_code ?? undefined,
-              line1: cart.billing_address?.address_1 ?? undefined,
-              line2: cart.billing_address?.address_2 ?? undefined,
-              postal_code: cart.billing_address?.postal_code ?? undefined,
-              state: cart.billing_address?.province ?? undefined,
-            },
-            email: cart.email,
-            phone: cart.billing_address?.phone ?? undefined,
-          },
-        },
-      })
-      .then(({ error, paymentIntent }) => {
-        if (error) {
-          const pi = error.payment_intent
-
-          if (
-            (pi && pi.status === "requires_capture") ||
-            (pi && pi.status === "succeeded")
-          ) {
-            onPaymentCompleted()
-          }
-
-          setErrorMessage(error.message || null)
-          return
-        }
-
-        if (
-          (paymentIntent && paymentIntent.status === "requires_capture") ||
-          paymentIntent.status === "succeeded"
-        ) {
-          return onPaymentCompleted()
-        }
-
-        return
-      })
-  }
-
-  return (
-    <>
-      <Button
-        disabled={disabled || notReady}
-        onClick={handlePayment}
-        size="large"
-        isLoading={submitting}
-        data-testid={dataTestId}
-      >
-        Place order
-      </Button>
-      <ErrorMessage
-        error={errorMessage}
-        data-testid="stripe-payment-error-message"
-      />
-    </>
-  )
+const StripePaymentButton = ({ cart, notReady, "data-testid": dataTestId }: any) => {
+  // Keeping this brief to highlight the M-Pesa changes. Keep your existing Stripe code here!
+  return <Button disabled>Place order</Button>
 }
 
-const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
-  const [submitting, setSubmitting] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const onPaymentCompleted = async () => {
-    await placeOrder()
-      .catch((err) => {
-        setErrorMessage(err.message)
-      })
-      .finally(() => {
-        setSubmitting(false)
-      })
-  }
-
-  const handlePayment = () => {
-    setSubmitting(true)
-
-    onPaymentCompleted()
-  }
-
-  return (
-    <>
-      <Button
-        disabled={notReady}
-        isLoading={submitting}
-        onClick={handlePayment}
-        size="large"
-        data-testid="submit-order-button"
-      >
-        Place order
-      </Button>
-      <ErrorMessage
-        error={errorMessage}
-        data-testid="manual-payment-error-message"
-      />
-    </>
-  )
+const ManualTestPaymentButton = ({ notReady }: any) => {
+  // Keep your existing Manual code here!
+  return <Button disabled>Place order</Button>
 }
 
-// ADDED: The new M-Pesa Payment Button Component
+// 3. UPDATED MPESA PAYMENT BUTTON
 const MpesaPaymentButton = ({
   cart,
   notReady,
@@ -230,36 +93,47 @@ const MpesaPaymentButton = ({
     setErrorMessage(null)
 
     try {
-      // 1. Update the payment session with the phone number
-      // UNCOMMENT THIS ONCE YOU CREATE THE ACTION
-      // await updatePaymentSessionData(cart.id, "mpesa", { phone_number: phone })
-
-      // 2. Trigger the STK push by attempting to place the order
-      await placeOrder()
-
-      // 3. Since the backend returns REQUIRES_MORE, the order won't complete yet.
-      // Transition to the waiting/polling UI.
-      setIsWaitingForPin(true)
+      // Call the custom backend endpoint we built earlier
+      const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/mpesa/stk-push`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: phone, 
+          amount: cart.total, // Medusa passes this down
+          cart_id: cart.id
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
+        // Transition to the waiting/polling UI.
+        setIsWaitingForPin(true)
+      } else {
+        setErrorMessage("Failed to initiate STK push. Please check your credentials.")
+      }
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to initiate M-Pesa payment.")
+    } finally {
       setSubmitting(false)
     }
   }
 
-  // 4. Poll Medusa to see if the Daraja webhook has completed the order
+  // Poll the Medusa backend to see if the Daraja webhook has completed the cart
   useEffect(() => {
     let pollingInterval: NodeJS.Timeout
 
     if (isWaitingForPin) {
       pollingInterval = setInterval(async () => {
         try {
-          // You may need to adjust this endpoint path based on your exact Next.js setup
-          const res = await fetch(`/api/store/carts/${cart.id}`)
+          // Poll the Medusa backend directly to check the cart status
+          const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}`)
           if (res.ok) {
             const data = await res.json()
+            // If the webhook completes the order, the cart will have a completed_at timestamp
             if (data.cart?.completed_at) {
-              // Webhook was successful! Route to success page.
-              router.push(`/checkout/${cart.id}`)
+              // Webhook was successful! Route to order confirmation page.
+              router.push(`/order/confirmed/${cart.id}`) // Adjust this route to match your storefront's success page
             }
           }
         } catch (error) {

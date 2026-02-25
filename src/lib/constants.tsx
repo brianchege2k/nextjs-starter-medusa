@@ -34,10 +34,19 @@ export const paymentInfoMap: Record<
     title: "Manual Payment",
     icon: <CreditCard />,
   },
-  // Add more payment providers here
+  // ADD M-PESA HERE:
+  // Catch both potential ID formats Medusa V2 might generate for your provider
+  pp_mpesa_mpesa: {
+    title: "M-Pesa Express",
+    icon: <CreditCard />, // You can swap this for a custom green M-Pesa icon later
+  },
+  mpesa: {
+    title: "M-Pesa Express",
+    icon: <CreditCard />,
+  }
 }
 
-// This only checks if it is native stripe or medusa payments for card payments, it ignores the other stripe-based providers
+// Existing helpers...
 export const isStripeLike = (providerId?: string) => {
   return (
     providerId?.startsWith("pp_stripe_") || providerId?.startsWith("pp_medusa-")
@@ -47,29 +56,18 @@ export const isStripeLike = (providerId?: string) => {
 export const isPaypal = (providerId?: string) => {
   return providerId?.startsWith("pp_paypal")
 }
+
 export const isManual = (providerId?: string) => {
   return providerId?.startsWith("pp_system_default")
 }
 
+// ADD THE M-PESA HELPER:
+export const isMpesa = (providerId?: string) => {
+  return providerId?.includes("mpesa")
+}
+
 // Add currencies that don't need to be divided by 100
 export const noDivisionCurrencies = [
-  "krw",
-  "jpy",
-  "vnd",
-  "clp",
-  "pyg",
-  "xaf",
-  "xof",
-  "bif",
-  "djf",
-  "gnf",
-  "kmf",
-  "mga",
-  "rwf",
-  "xpf",
-  "htg",
-  "vuv",
-  "xag",
-  "xdr",
-  "xau",
+  "krw", "jpy", "vnd", "clp", "pyg", "xaf", "xof", "bif", "djf", "gnf",
+  "kmf", "mga", "rwf", "xpf", "htg", "vuv", "xag", "xdr", "xau",
 ]
