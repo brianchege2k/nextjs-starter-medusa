@@ -93,7 +93,7 @@ const handlePayment = async () => {
     setErrorMessage(null)
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/mpesa/stk-push`, {
+      const response = await fetch(`${process.env.MEDUSA_BACKEND_URL}/store/mpesa/stk-push`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
