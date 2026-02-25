@@ -6,6 +6,9 @@ import StripeWrapper from "./stripe-wrapper"
 import { HttpTypes } from "@medusajs/types"
 import { isStripeLike } from "@lib/constants"
 
+// 1. Import your new M-Pesa component
+import MpesaPayment from "../mpesa-payment" 
+
 type PaymentWrapperProps = {
   cart: HttpTypes.StoreCart
   children: React.ReactNode
@@ -44,6 +47,25 @@ const PaymentWrapper: React.FC<PaymentWrapperProps> = ({ cart, children }) => {
     )
   }
 
+  // 2. Add the check for M-Pesa
+  if (paymentSession?.provider_id === "mpesa") {
+    return (
+      <div className="flex flex-col gap-4">
+        {/* Render your M-Pesa UI and pass the necessary cart details */}
+        <MpesaPayment 
+          cartId={cart.id} 
+          amount={cart.total || 0} 
+        />
+        {/* Notice we are NOT rendering {children} here. 
+          {children} contains the default Medusa "Place Order" button. 
+          Because your MpesaPayment component has its own "Send STK Push" button, 
+          omitting {children} prevents confusing the user with two submit buttons.
+        */}
+      </div>
+    )
+  }
+
+  // Fallback for manual or other payment methods
   return <div>{children}</div>
 }
 
