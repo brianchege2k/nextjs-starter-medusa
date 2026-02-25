@@ -471,3 +471,44 @@ export async function listCartOptions() {
     cache: "force-cache",
   })
 }
+
+
+/**
+ * Updates an active payment session with custom data (e.g., M-Pesa phone number)
+ */
+export async function updatePaymentSessionData(
+  cartId: string,
+  providerId: string,
+  data: Record<string, unknown>
+) {
+  if (!cartId) {
+    throw new Error("No cart ID provided")
+  }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  try {
+    // Uses the Medusa v2 JS Client to inject the data into the session
+    const response = await sdk.client.fetch(
+      `/store/carts/${cartId}/payment-sessions/${providerId}`,
+      {
+        method: "POST",
+        body: {
+          data,
+        },
+        headers,
+      }
+    )
+
+    // Revalidate the cart cache so the frontend knows about the new data
+    const cartCacheTag = await getCacheTag("carts")
+    revalidateTag(cartCacheTag)
+
+    return response
+  } catch (error: any) {
+    console.error("Failed to update payment session:", error.message)
+    return medusaError(error)
+  }
+}
