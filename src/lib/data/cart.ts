@@ -29,29 +29,31 @@ export async function retrieveCart(
   cacheStrategy: RequestCache = "force-cache"
 ) {
   const id = cartId || (await getCartId())
-  fields ??= "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
-
   if (!id) return null
 
   const headers = { ...(await getAuthHeaders()) }
-  
-  // Only use revalidate logic if we aren't forcing a fresh fetch
-  const next = cacheStrategy === "no-store" 
-    ? { revalidate: 0 } 
-    : { ...(await getCacheOptions("carts")) }
+  const next = cacheStrategy === "no-store" ? { revalidate: 0 } : { ...(await getCacheOptions("carts")) }
 
-  return await sdk.client
-    .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
-      method: "GET",
-      query: { fields },
-      headers,
-      next,
-      cache: cacheStrategy,
-    })
-    .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
-    // REMOVE the catch-all null. Let the caller handle the error.
+  try {
+    const response = await sdk.client.fetch<HttpTypes.StoreCartResponse>(
+      `/store/carts/${id}`, 
+      {
+        method: "GET",
+        query: { fields },
+        headers,
+        next,
+        cache: cacheStrategy,
+      }
+    )
+    return response.cart
+  } catch (error: any) {
+    // If Medusa returns 400, it's highly likely the cart is now an order
+    if (error.status === 400 || error.response?.status === 400) {
+      return { id, completed_at: new Date(), is_converted: true } as any
+    }
+    return null
+  }
 }
-
 export async function getOrSetCart(countryCode: string) {
   const region = await getRegion(countryCode)
 

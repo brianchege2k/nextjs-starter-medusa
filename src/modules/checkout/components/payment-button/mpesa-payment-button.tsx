@@ -69,28 +69,18 @@ useEffect(() => {
 
   if (isWaitingForPin) {
     pollingInterval = setInterval(async () => {
-      try {
-        const updatedCart = await retrieveCart(cart.id, "*", "no-store")
+      const updatedCart = await retrieveCart(cart.id, "id,completed_at", "no-store")
+      
+      // If the cart is marked completed OR the server action returned our "converted" flag
+      if (updatedCart && updatedCart.completed_at) {
+        clearInterval(pollingInterval)
+        const countryCode = cart.shipping_address?.country_code?.toLowerCase() || "ke"
         
-        // Scenario A: Cart is found and completed
-        if (updatedCart && updatedCart.completed_at) {
-          handleSuccess()
-        }
-      } catch (error: any) {
-        // Scenario B: Cart is "Gone" (400/404) - This means the webhook worked!
-        // Medusa V2 archives the cart once it becomes an order.
-        console.log("Cart is no longer active, redirecting to order page...")
-        handleSuccess()
+        // Final attempt at redirecting
+        // Using window.location.href ensures Next.js doesn't try to be clever with the cache
+        window.location.href = `/${countryCode}/order/${cart.id}/confirmed`
       }
     }, 3000)
-  }
-
-  const handleSuccess = () => {
-    if (pollingInterval) clearInterval(pollingInterval)
-    const countryCode = cart.shipping_address?.country_code?.toLowerCase() || "ke"
-    
-    // In Medusa V2, the Order ID usually maps to the Cart ID in this workflow
-    window.location.href = `/${countryCode}/order/${cart.id}/confirmed`
   }
 
   return () => clearInterval(pollingInterval)
