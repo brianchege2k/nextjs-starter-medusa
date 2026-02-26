@@ -31,8 +31,11 @@ export async function retrieveCart(
   const id = cartId || (await getCartId())
   if (!id) return null
 
-  const headers = { ...(await getAuthHeaders()) }
-  const next = cacheStrategy === "no-store" ? { revalidate: 0 } : { ...(await getCacheOptions("carts")) }
+  const headers = { 
+    ...(await getAuthHeaders()),
+    // ADD THIS LINE
+    "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
+  }
 
   try {
     const response = await sdk.client.fetch<HttpTypes.StoreCartResponse>(
@@ -41,15 +44,16 @@ export async function retrieveCart(
         method: "GET",
         query: { fields },
         headers,
-        next,
         cache: cacheStrategy,
+        next: { revalidate: 0 } 
       }
     )
     return response.cart
   } catch (error: any) {
-    // If Medusa returns 400, it's highly likely the cart is now an order
-    if (error.status === 400 || error.response?.status === 400) {
-      return { id, completed_at: new Date(), is_converted: true } as any
+    // Now that the key is fixed, if we still get a 400, 
+    // it truly means the cart has been converted to an order.
+    if (error.status === 400 || error.status === 404) {
+      return { id, completed_at: new Date() } as any
     }
     return null
   }
