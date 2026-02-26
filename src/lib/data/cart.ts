@@ -21,32 +21,28 @@ import { getLocale } from "@lib/data/locale-actions"
  * @param cartId - optional - The ID of the cart to retrieve.
  * @returns The cart object if found, or null if not found.
  */
-export async function retrieveCart(cartId?: string, fields?: string) {
+// @lib/data/cart.ts
+
+export async function retrieveCart(
+  cartId?: string, 
+  fields?: string, 
+  cacheStrategy: RequestCache = "force-cache" // Default to cached for speed
+) {
   const id = cartId || (await getCartId())
-  fields ??=
-    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+  fields ??= "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
 
-  if (!id) {
-    return null
-  }
+  if (!id) return null
 
-  const headers = {
-    ...(await getAuthHeaders()),
-  }
-
-  const next = {
-    ...(await getCacheOptions("carts")),
-  }
+  const headers = { ...(await getAuthHeaders()) }
+  const next = { ...(await getCacheOptions("carts")) }
 
   return await sdk.client
     .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
       method: "GET",
-      query: {
-        fields,
-      },
+      query: { fields },
       headers,
       next,
-      cache: "force-cache",
+      cache: cacheStrategy, // Use the strategy passed in
     })
     .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
     .catch(() => null)

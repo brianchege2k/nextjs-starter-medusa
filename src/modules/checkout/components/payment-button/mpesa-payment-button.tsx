@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button, Input } from "@medusajs/ui"
 import { HttpTypes } from "@medusajs/types"
 import { useRouter } from "next/navigation"
-import { placeOrder, updatePaymentSessionData, retrieveCart } from "@lib/data/cart"
+import { retrieveCart } from "@lib/data/cart" // Keep this for polling
 import ErrorMessage from "../error-message"
 
 type MpesaPaymentButtonProps = {
@@ -34,15 +34,28 @@ const MpesaPaymentButton = ({
     setErrorMessage(null)
 
     try {
-      // 1. Update the payment session with the phone number via the server action
-      await updatePaymentSessionData(cart.id, "mpesa", { phone_number: phone })
+      // 1. Call your CUSTOM STK Push endpoint
+      const response = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/mpesa/stk-push`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Include the publishable key if your backend requires it
+          "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
+        },
+        body: JSON.stringify({
+          phone: phone,
+          amount: cart.total, // Medusa total is in cents (e.g. 1000 = 10 KES)
+          cart_id: cart.id
+        })
+      })
 
-      // 2. Trigger the STK push by attempting to place the order
-      // This will call the authorizePayment method on your Medusa backend
-      await placeOrder()
+      const data = await response.json()
 
-      // 3. The backend returns REQUIRES_MORE for M-Pesa, so the order isn't complete yet.
-      // Transition the UI to the waiting/polling state.
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to initiate M-Pesa push.")
+      }
+
+      // 2. Transition to waiting state
       setIsWaitingForPin(true)
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to initiate M-Pesa payment.")
@@ -50,31 +63,25 @@ const MpesaPaymentButton = ({
     }
   }
 
-  // 4. Poll Medusa to see if the Daraja webhook has completed the order
+  // 3. Poll Medusa to see if the Webhook has converted the cart to an order
   useEffect(() => {
     let pollingInterval: NodeJS.Timeout
 
     if (isWaitingForPin) {
-      pollingInterval = setInterval(async () => {
-        try {
-          // Use the existing retrieveCart server action to check the cart status
-          const updatedCart = await retrieveCart(cart.id)
-          
-          if (updatedCart && updatedCart.completed_at) {
-            // Webhook was successful and Medusa completed the cart!
-            clearInterval(pollingInterval)
-            
-            const countryCode = cart.shipping_address?.country_code?.toLowerCase() || "us"
-            
-            // Redirect to the order confirmation page
-            // Note: Depending on your exact v2 setup, the order ID might be different from the cart ID.
-            // If your starter routes differently, update this path.
-            router.push(`/${countryCode}/order/${cart.id}/confirmed`)
-          }
-        } catch (error) {
-          console.error("Polling error:", error)
-        }
-      }, 3000) // Poll every 3 seconds
+// Inside useEffect in MpesaPaymentButton.tsx
+pollingInterval = setInterval(async () => {
+  try {
+    // PASS "no-store" here to force a fresh check on the backend
+    const updatedCart = await retrieveCart(cart.id, undefined, "no-store")
+    
+    if (updatedCart && updatedCart.completed_at) {
+      clearInterval(pollingInterval)
+      // ... redirect logic
+    }
+  } catch (error) {
+    console.error("Polling error:", error)
+  }
+}, 3000)
     }
 
     return () => clearInterval(pollingInterval)
