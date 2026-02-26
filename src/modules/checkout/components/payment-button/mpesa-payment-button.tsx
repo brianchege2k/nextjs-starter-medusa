@@ -69,18 +69,42 @@ useEffect(() => {
 
   if (isWaitingForPin) {
     pollingInterval = setInterval(async () => {
-      const updatedCart = await retrieveCart(cart.id, "id,completed_at", "no-store")
-      
-      // If the cart is marked completed OR the server action returned our "converted" flag
-      if (updatedCart && updatedCart.completed_at) {
-        clearInterval(pollingInterval)
-        const countryCode = cart.shipping_address?.country_code?.toLowerCase() || "ke"
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}`,
+          {
+            headers: {
+              // 1. THIS KEY IS THE KEY TO THE REDIRECT
+              "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "",
+              "Content-Type": "application/json",
+            },
+            cache: "no-store", 
+          }
+        )
+
+        // 2. If the cart is found, check if the webhook completed it
+        if (res.ok) {
+          const data = await res.json()
+          if (data.cart?.completed_at) {
+            handleSuccess(data.cart.id)
+          }
+        } 
         
-        // Final attempt at redirecting
-        // Using window.location.href ensures Next.js doesn't try to be clever with the cache
-        window.location.href = `/${countryCode}/order/${cart.id}/confirmed`
+        // 3. If we get a 400/404, it means the cart was turned into an order
+        else if (res.status === 400 || res.status === 404) {
+          handleSuccess(cart.id)
+        }
+      } catch (error) {
+        console.error("Polling error:", error)
       }
     }, 3000)
+  }
+
+  const handleSuccess = (id: string) => {
+    clearInterval(pollingInterval)
+    const countryCode = cart.shipping_address?.country_code?.toLowerCase() || "ke"
+    // Use window.location.href to force a clean load of the confirmation page
+    window.location.href = `/${countryCode}/order/confirmed/${id}`
   }
 
   return () => clearInterval(pollingInterval)
