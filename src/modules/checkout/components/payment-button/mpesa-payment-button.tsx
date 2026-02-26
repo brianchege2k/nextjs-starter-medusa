@@ -64,28 +64,37 @@ const MpesaPaymentButton = ({
   }
 
   // 3. Poll Medusa to see if the Webhook has converted the cart to an order
-  useEffect(() => {
-    let pollingInterval: NodeJS.Timeout
+useEffect(() => {
+  let pollingInterval: NodeJS.Timeout
 
-    if (isWaitingForPin) {
-// Inside useEffect in MpesaPaymentButton.tsx
-pollingInterval = setInterval(async () => {
-  try {
-    // PASS "no-store" here to force a fresh check on the backend
-    const updatedCart = await retrieveCart(cart.id, undefined, "no-store")
-    
-    if (updatedCart && updatedCart.completed_at) {
-      clearInterval(pollingInterval)
-      // ... redirect logic
-    }
-  } catch (error) {
-    console.error("Polling error:", error)
+  if (isWaitingForPin) {
+    pollingInterval = setInterval(async () => {
+      try {
+        const updatedCart = await retrieveCart(cart.id, "*", "no-store")
+        
+        // Scenario A: Cart is found and completed
+        if (updatedCart && updatedCart.completed_at) {
+          handleSuccess()
+        }
+      } catch (error: any) {
+        // Scenario B: Cart is "Gone" (400/404) - This means the webhook worked!
+        // Medusa V2 archives the cart once it becomes an order.
+        console.log("Cart is no longer active, redirecting to order page...")
+        handleSuccess()
+      }
+    }, 3000)
   }
-}, 3000)
-    }
 
-    return () => clearInterval(pollingInterval)
-  }, [isWaitingForPin, cart.id, router, cart.shipping_address?.country_code])
+  const handleSuccess = () => {
+    if (pollingInterval) clearInterval(pollingInterval)
+    const countryCode = cart.shipping_address?.country_code?.toLowerCase() || "ke"
+    
+    // In Medusa V2, the Order ID usually maps to the Cart ID in this workflow
+    window.location.href = `/${countryCode}/order/${cart.id}/confirmed`
+  }
+
+  return () => clearInterval(pollingInterval)
+}, [isWaitingForPin, cart.id, cart.shipping_address?.country_code])
 
   return (
     <div className="flex flex-col gap-4 w-full mt-4">

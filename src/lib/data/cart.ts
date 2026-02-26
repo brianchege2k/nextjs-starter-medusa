@@ -26,7 +26,7 @@ import { getLocale } from "@lib/data/locale-actions"
 export async function retrieveCart(
   cartId?: string, 
   fields?: string, 
-  cacheStrategy: RequestCache = "force-cache" // Default to cached for speed
+  cacheStrategy: RequestCache = "force-cache"
 ) {
   const id = cartId || (await getCartId())
   fields ??= "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
@@ -34,7 +34,11 @@ export async function retrieveCart(
   if (!id) return null
 
   const headers = { ...(await getAuthHeaders()) }
-  const next = { ...(await getCacheOptions("carts")) }
+  
+  // Only use revalidate logic if we aren't forcing a fresh fetch
+  const next = cacheStrategy === "no-store" 
+    ? { revalidate: 0 } 
+    : { ...(await getCacheOptions("carts")) }
 
   return await sdk.client
     .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
@@ -42,10 +46,10 @@ export async function retrieveCart(
       query: { fields },
       headers,
       next,
-      cache: cacheStrategy, // Use the strategy passed in
+      cache: cacheStrategy,
     })
     .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
-    .catch(() => null)
+    // REMOVE the catch-all null. Let the caller handle the error.
 }
 
 export async function getOrSetCart(countryCode: string) {
