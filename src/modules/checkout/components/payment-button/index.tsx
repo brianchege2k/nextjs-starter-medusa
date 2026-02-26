@@ -129,31 +129,46 @@ const handlePayment = async () => {
     }
   }
   // Poll the Medusa backend to see if the Daraja webhook has completed the cart
-  useEffect(() => {
-    let pollingInterval: NodeJS.Timeout
+useEffect(() => {
+  let pollingInterval: NodeJS.Timeout
 
-    if (isWaitingForPin) {
-      pollingInterval = setInterval(async () => {
-        try {
-          // Poll the Medusa backend directly to check the cart status
-          const res = await fetch(`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}`)
-          if (res.ok) {
-            const data = await res.json()
-            // If the webhook completes the order, the cart will have a completed_at timestamp
-            if (data.cart?.completed_at) {
-              // Webhook was successful! Route to order confirmation page.
-              router.push(`/order/confirmed/${cart.id}`) // Adjust this route to match your storefront's success page
-            }
+  if (isWaitingForPin) {
+    pollingInterval = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}`,
+          {
+            headers: {
+              "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "",
+              "Content-Type": "application/json",
+            },
+            cache: "no-store", // Crucial: Don't let the browser cache the 'unpaid' state
           }
-        } catch (error) {
-          console.error("Polling error:", error)
+        )
+
+        if (res.ok) {
+          const data = await res.json()
+          if (data.cart?.completed_at) {
+            clearInterval(pollingInterval)
+            
+            // Note: Use a hard redirect or router.push based on your store's locale/path
+            const countryCode = cart.shipping_address?.country_code?.toLowerCase() || "ke"
+            window.location.href = `/${countryCode}/order/confirmed/${cart.id}`
+          }
+        } else if (res.status === 400 || res.status === 404) {
+          // If the cart is GONE, it means it was successfully converted to an order
+          clearInterval(pollingInterval)
+          const countryCode = cart.shipping_address?.country_code?.toLowerCase() || "ke"
+          window.location.href = `/${countryCode}/order/confirmed/${cart.id}`
         }
-      }, 3000)
-    }
+      } catch (error) {
+        console.error("Polling error:", error)
+      }
+    }, 3000)
+  }
 
-    return () => clearInterval(pollingInterval)
-  }, [isWaitingForPin, cart.id, router])
-
+  return () => clearInterval(pollingInterval)
+}, [isWaitingForPin, cart.id, router, cart.shipping_address?.country_code])
   return (
     <div className="flex flex-col gap-4 w-full mt-4">
       {isWaitingForPin ? (
