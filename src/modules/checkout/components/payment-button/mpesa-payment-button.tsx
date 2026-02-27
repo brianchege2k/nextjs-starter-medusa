@@ -57,7 +57,7 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
       pollingInterval = setInterval(async () => {
         try {
 const res = await fetch(
-  `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}`,
+`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}?fields=*payment_collection.payment_sessions`,
   {
     headers: { 
       "x-publishable-api-key": PUB_KEY,
