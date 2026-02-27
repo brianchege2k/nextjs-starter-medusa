@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react"
 import { Button, Input } from "@medusajs/ui"
 import { HttpTypes } from "@medusajs/types"
-// IMPORT THE NATIVE MEDUSA FUNCTION
 import { placeOrder } from "@lib/data/cart" 
 import ErrorMessage from "../error-message"
+
+// 1. HARDCODE FALLBACK FOR SAFETY
+const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "pk_f825457ec04612c122d1ced7d459990af074a9c2ea3f3470074c93f75543cfd4"
 
 type MpesaPaymentButtonProps = {
   cart: HttpTypes.StoreCart
@@ -33,7 +35,8 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || ""
+          // Use our reliable key variable here
+          "x-publishable-api-key": PUB_KEY 
         },
         body: JSON.stringify({ phone, amount: cart.total, cart_id: cart.id })
       })
@@ -53,11 +56,11 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
     if (isWaitingForPin) {
       pollingInterval = setInterval(async () => {
         try {
-          // Poll the CART to avoid the 401 Orders error
           const res = await fetch(
             `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}?t=${Date.now()}`,
             {
-              headers: { "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "" },
+              // Use our reliable key variable here too
+              headers: { "x-publishable-api-key": PUB_KEY },
               cache: "no-store", 
             }
           )
@@ -68,12 +71,10 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
               (s: any) => s.provider_id === "mpesa"
             )
 
-            // If the webhook added the auth_success flag...
             if (session?.data?.auth_success === true) {
               clearInterval(pollingInterval)
               console.log("✅ Webhook confirmed payment! Triggering native Medusa placeOrder...")
               
-              // This triggers the native Medusa logic: complete cart, get order ID, and redirect!
               await placeOrder() 
             }
           }
