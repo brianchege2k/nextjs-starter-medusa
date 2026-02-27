@@ -104,8 +104,8 @@ useEffect(() => {
     clearInterval(pollingInterval)
     const countryCode = cart.shipping_address?.country_code?.toLowerCase() || "ke"
     // Use window.location.href to force a clean load of the confirmation page
-    window.location.href = `/${countryCode}/order/confirmed/${id}`
-  }
+window.location.href = `/${countryCode}/order/${id}/confirmed`
+}
 
   return () => clearInterval(pollingInterval)
 }, [isWaitingForPin, cart.id, cart.shipping_address?.country_code])
