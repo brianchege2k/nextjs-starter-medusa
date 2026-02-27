@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button, Input } from "@medusajs/ui"
 import { HttpTypes } from "@medusajs/types"
+// IMPORT THE NATIVE MEDUSA FUNCTION
+import { placeOrder } from "@lib/data/cart" 
 import ErrorMessage from "../error-message"
 
 type MpesaPaymentButtonProps = {
@@ -36,8 +38,7 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
         body: JSON.stringify({ phone, amount: cart.total, cart_id: cart.id })
       })
 
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message || "Failed to initiate M-Pesa push.")
+      if (!response.ok) throw new Error("Failed to initiate M-Pesa push.")
       
       setIsWaitingForPin(true)
     } catch (err: any) {
@@ -52,9 +53,9 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
     if (isWaitingForPin) {
       pollingInterval = setInterval(async () => {
         try {
-          // BULLETPROOF CHECK: Instead of checking the cart, we search for the created ORDER.
+          // Poll the CART to avoid the 401 Orders error
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/orders?cart_id=${cart.id}&t=${Date.now()}`,
+            `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}?t=${Date.now()}`,
             {
               headers: { "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "" },
               cache: "no-store", 
@@ -63,14 +64,17 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
 
           if (res.ok) {
             const data = await res.json()
-            // If the webhook completed the cart, an order will exist in this array!
-            if (data.orders && data.orders.length > 0) {
+            const session = data.cart?.payment_collection?.payment_sessions?.find(
+              (s: any) => s.provider_id === "mpesa"
+            )
+
+            // If the webhook added the auth_success flag...
+            if (session?.data?.auth_success === true) {
               clearInterval(pollingInterval)
-              const orderId = data.orders[0].id
-              const countryCode = cart.shipping_address?.country_code?.toLowerCase() || "ke"
+              console.log("✅ Webhook confirmed payment! Triggering native Medusa placeOrder...")
               
-              // Redirect using the REAL Order ID, matching your folder structure
-              window.location.href = `/${countryCode}/order/${orderId}/confirmed`
+              // This triggers the native Medusa logic: complete cart, get order ID, and redirect!
+              await placeOrder() 
             }
           }
         } catch (error) {
@@ -80,7 +84,7 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
     }
 
     return () => clearInterval(pollingInterval)
-  }, [isWaitingForPin, cart.id, cart.shipping_address?.country_code])
+  }, [isWaitingForPin, cart.id])
 
   return (
     <div className="flex flex-col gap-4 w-full mt-4">
