@@ -56,14 +56,17 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
     if (isWaitingForPin) {
       pollingInterval = setInterval(async () => {
         try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}?t=${Date.now()}`,
-            {
-              // Use our reliable key variable here too
-              headers: { "x-publishable-api-key": PUB_KEY },
-              cache: "no-store", 
-            }
-          )
+const res = await fetch(
+  `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}`,
+  {
+    headers: { 
+      "x-publishable-api-key": PUB_KEY,
+      "Cache-Control": "no-cache, no-store, must-revalidate", // Add these standard headers instead
+      "Pragma": "no-cache"
+    },
+    cache: "no-store", 
+  }
+)
 
           if (res.ok) {
             const data = await res.json()
