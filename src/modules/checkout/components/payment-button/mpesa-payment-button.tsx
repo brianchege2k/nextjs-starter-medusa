@@ -6,7 +6,6 @@ import { HttpTypes } from "@medusajs/types"
 import { placeOrder } from "@lib/data/cart" 
 import ErrorMessage from "../error-message"
 
-// 1. HARDCODE FALLBACK FOR SAFETY
 const PUB_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "pk_f825457ec04612c122d1ced7d459990af074a9c2ea3f3470074c93f75543cfd4"
 
 type MpesaPaymentButtonProps = {
@@ -35,7 +34,6 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Use our reliable key variable here
           "x-publishable-api-key": PUB_KEY 
         },
         body: JSON.stringify({ phone, amount: cart.total, cart_id: cart.id })
@@ -52,21 +50,31 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
 
   useEffect(() => {
     let pollingInterval: NodeJS.Timeout
+    let timeoutId: NodeJS.Timeout
 
     if (isWaitingForPin) {
+      // 1. Timeout Fallback: Stop polling after 60 seconds just in case the Daraja webhook never arrives
+      timeoutId = setTimeout(() => {
+        clearInterval(pollingInterval)
+        setIsWaitingForPin(false)
+        setSubmitting(false)
+        setErrorMessage("Payment request timed out. Please try again.")
+      }, 60000)
+
       pollingInterval = setInterval(async () => {
         try {
-const res = await fetch(
-`${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}?fields=*payment_collection.payment_sessions`,
-  {
-    headers: { 
-      "x-publishable-api-key": PUB_KEY,
-      "Cache-Control": "no-cache, no-store, must-revalidate", // Add these standard headers instead
-      "Pragma": "no-cache"
-    },
-    cache: "no-store", 
-  }
-)
+          // 2. Aggressive Cache Busting: Add ?t= timestamp to the URL
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}?fields=*payment_collection.payment_sessions&t=${Date.now()}`,
+            {
+              headers: { 
+                "x-publishable-api-key": PUB_KEY,
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache"
+              },
+              cache: "no-store", 
+            }
+          )
 
           if (res.ok) {
             const data = await res.json()
@@ -75,19 +83,37 @@ const res = await fetch(
             )
 
             if (session?.data?.auth_success === true) {
+              // ✅ SUCCESS
               clearInterval(pollingInterval)
+              clearTimeout(timeoutId)
               console.log("✅ Webhook confirmed payment! Triggering native Medusa placeOrder...")
               
               await placeOrder() 
+            } else if (session?.data?.auth_success === false) {
+              // ❌ FAILURE (User cancelled, wrong PIN, etc.)
+              clearInterval(pollingInterval)
+              clearTimeout(timeoutId)
+              console.log("❌ Webhook reported payment failure.")
+              
+              setErrorMessage(session.data.mpesa_error as string || "Payment failed or was cancelled.")
+              setIsWaitingForPin(false)
+              setSubmitting(false)
             }
           }
-        } catch (error) {
+        } catch (error: any) {
+          // 3. Prevent Next.js Redirect Swallowing
+          if (error?.message === 'NEXT_REDIRECT' || error?.digest?.startsWith('NEXT_REDIRECT')) {
+            throw error; // Let Next.js execute the page redirect!
+          }
           console.error("Polling error:", error)
         }
       }, 3000)
     }
 
-    return () => clearInterval(pollingInterval)
+    return () => {
+      clearInterval(pollingInterval)
+      clearTimeout(timeoutId)
+    }
   }, [isWaitingForPin, cart.id])
 
   return (
