@@ -48,12 +48,12 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
     }
   }
 
-  useEffect(() => {
+useEffect(() => {
     let pollingInterval: NodeJS.Timeout
     let timeoutId: NodeJS.Timeout
 
     if (isWaitingForPin) {
-      // 1. Timeout Fallback: Stop polling after 60 seconds just in case the Daraja webhook never arrives
+      // 1. Timeout Fallback: Stop polling after 60 seconds
       timeoutId = setTimeout(() => {
         clearInterval(pollingInterval)
         setIsWaitingForPin(false)
@@ -63,9 +63,9 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
 
       pollingInterval = setInterval(async () => {
         try {
-          // 2. Aggressive Cache Busting: Add ?t= timestamp to the URL
+          // FIX: Removed the invalid `fields` parameter. The default cart response already includes payment sessions!
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}?fields=*payment_collection.payment_sessions&t=${Date.now()}`,
+            `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}?t=${Date.now()}`,
             {
               headers: { 
                 "x-publishable-api-key": PUB_KEY,
@@ -99,11 +99,15 @@ const MpesaPaymentButton = ({ cart, notReady, "data-testid": dataTestId }: Mpesa
               setIsWaitingForPin(false)
               setSubmitting(false)
             }
+          } else {
+             // Let's log actual Medusa API errors to the console if it fails again
+             const errorData = await res.json()
+             console.error("Medusa API Error:", errorData)
           }
         } catch (error: any) {
-          // 3. Prevent Next.js Redirect Swallowing
+          // Prevent Next.js Redirect Swallowing
           if (error?.message === 'NEXT_REDIRECT' || error?.digest?.startsWith('NEXT_REDIRECT')) {
-            throw error; // Let Next.js execute the page redirect!
+            throw error; 
           }
           console.error("Polling error:", error)
         }
