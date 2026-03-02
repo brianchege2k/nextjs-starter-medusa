@@ -63,14 +63,15 @@ useEffect(() => {
 
       pollingInterval = setInterval(async () => {
         try {
-          // FIX: Removed the invalid `fields` parameter. The default cart response already includes payment sessions!
+          // FIX: Removed the `?t=` parameter. Relying on Cache-Control headers instead.
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}?t=${Date.now()}`,
+            `${process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL}/store/carts/${cart.id}`,
             {
               headers: { 
                 "x-publishable-api-key": PUB_KEY,
                 "Cache-Control": "no-cache, no-store, must-revalidate",
-                "Pragma": "no-cache"
+                "Pragma": "no-cache",
+                "Expires": "0" // Added extra standard cache-busting header
               },
               cache: "no-store", 
             }
@@ -100,7 +101,6 @@ useEffect(() => {
               setSubmitting(false)
             }
           } else {
-             // Let's log actual Medusa API errors to the console if it fails again
              const errorData = await res.json()
              console.error("Medusa API Error:", errorData)
           }
